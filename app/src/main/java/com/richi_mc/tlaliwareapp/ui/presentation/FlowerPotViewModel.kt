@@ -30,6 +30,8 @@ class FlowerPotViewModel @Inject constructor(
 
     private val bluetoothAdapter: BluetoothAdapter? = (application.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager).adapter
 
+    private var outputStream: java.io.OutputStream? = null
+
     private val _message = MutableStateFlow("")
     val message: StateFlow<String> = _message
 
@@ -51,7 +53,7 @@ class FlowerPotViewModel @Inject constructor(
                     socket.connect()
 
                     val inputStream = socket.inputStream
-                    val outputStream = socket.outputStream
+                    outputStream = socket.outputStream
 
                     val scanner = Scanner(inputStream)
                     while (scanner.hasNextLine()) {
@@ -64,4 +66,15 @@ class FlowerPotViewModel @Inject constructor(
             }
         }
     }
+    fun sendCommand(command: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                outputStream?.write((command + "\n").toByteArray())
+            } catch (e: IOException) {
+                Log.e("Bluetooth", "Error al enviar comando", e)
+            }
+        }
+    }
+
 }
+

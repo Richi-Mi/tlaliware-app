@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -59,6 +61,19 @@ fun FlowerPootScreen(flowerPotViewModel: FlowerPotViewModel, device: FlowerPootD
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onBackground
             )
+
+            Spacer(Modifier.height(16.dp))
+
+            Button(
+                onClick = {
+                    flowerPotViewModel.sendCommand("1")
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                modifier = Modifier
+                    .padding(16.dp)
+            ) {
+                Text("Regar ahora")
+            }
         }
     }
 }
