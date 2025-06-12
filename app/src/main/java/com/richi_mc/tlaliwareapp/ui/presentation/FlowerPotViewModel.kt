@@ -35,6 +35,13 @@ class FlowerPotViewModel @Inject constructor(
     private val _message = MutableStateFlow("")
     val message: StateFlow<String> = _message
 
+    private val _irrigationTime = MutableStateFlow(5) // tiempo en segundos
+    val irrigationTime: StateFlow<Int> = _irrigationTime
+
+    fun updateIrrigationTime(seconds: Int) {
+        _irrigationTime.value = seconds
+    }
+
     @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     fun connectToFlowerPot(device: FlowerPootDevice) {
         if (ActivityCompat.checkSelfPermission(
@@ -75,6 +82,8 @@ class FlowerPotViewModel @Inject constructor(
             }
         }
     }
-
+    fun sendIrrigationCommand() {
+        sendCommand(_irrigationTime.value.toString())
+    }
 }
 

@@ -21,11 +21,23 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.richi_mc.tlaliwareapp.R
 import com.richi_mc.tlaliwareapp.ui.FlowerPootDevice
+import androidx.compose.material3.*
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.runtime.*
 
 @Composable
 fun FlowerPootScreen(flowerPotViewModel: FlowerPotViewModel, device: FlowerPootDevice) {
     val message = flowerPotViewModel.message.collectAsState()
+    val irrigationTime = flowerPotViewModel.irrigationTime.collectAsState()
+    var showDialog by remember { mutableStateOf(false) }
+    var tempTime by remember { mutableStateOf(irrigationTime.value.toString()) }
+
     Scaffold(
+        floatingActionButton = {
+            FloatingActionButton(onClick = { showDialog = true }) {
+                Icon(Icons.Default.Settings, contentDescription = "Configuración")
+            }
+        },
         modifier = Modifier.background(MaterialTheme.colorScheme.background)
     ) { padding ->
         Column( modifier = Modifier.padding(padding)) {
@@ -74,6 +86,37 @@ fun FlowerPootScreen(flowerPotViewModel: FlowerPotViewModel, device: FlowerPootD
             ) {
                 Text("Regar ahora")
             }
+        }
+        if (showDialog) {
+            AlertDialog(
+                onDismissRequest = { showDialog = false },
+                title = { Text("Configuración de riego") },
+                text = {
+                    Column {
+                        Text("Tiempo de riego en segundos:")
+                        OutlinedTextField(
+                            value = tempTime,
+                            onValueChange = { tempTime = it },
+                            singleLine = true
+                        )
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        tempTime.toIntOrNull()?.let {
+                            flowerPotViewModel.updateIrrigationTime(it)
+                        }
+                        showDialog = false
+                    }) {
+                        Text("Guardar")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDialog = false }) {
+                        Text("Cancelar")
+                    }
+                }
+            )
         }
     }
 }
