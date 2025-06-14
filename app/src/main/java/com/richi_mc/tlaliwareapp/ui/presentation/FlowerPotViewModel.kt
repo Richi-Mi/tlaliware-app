@@ -11,11 +11,14 @@ import androidx.core.app.ActivityCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.richi_mc.tlaliwareapp.ui.FlowerPootDevice
+import com.richi_mc.tlaliwareapp.ui.data.PreferenceRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import java.io.IOException
 import java.util.Scanner
@@ -25,7 +28,8 @@ import javax.inject.Inject
 @HiltViewModel
 class FlowerPotViewModel @Inject constructor(
     @ApplicationContext
-    private val application: Context
+    private val application: Context,
+    private val preferenceRepository: PreferenceRepository
 ) : ViewModel() {
 
     private val bluetoothAdapter: BluetoothAdapter? = (application.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager).adapter
@@ -38,12 +42,29 @@ class FlowerPotViewModel @Inject constructor(
     private val _irrigationTime = MutableStateFlow(5) // tiempo en segundos
     val irrigationTime: StateFlow<Int> = _irrigationTime
 
+    init {
+        viewModelScope.launch {
+            preferenceRepository.irrigationTime.collect{
+                _irrigationTime.value = it
+            }
+        }
+    }
+
     fun updateIrrigationTime(seconds: Int) {
-        _irrigationTime.value = seconds
+        viewModelScope.launch {
+            preferenceRepository.saveIrrigationTime(seconds)
+        }
+    }
+
+    suspend fun getSavedMacAddress(): String? {
+        return preferenceRepository.macAddress.map { it }.firstOrNull()
     }
 
     @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     fun connectToFlowerPot(device: FlowerPootDevice) {
+        viewModelScope.launch {
+            preferenceRepository.saveMacAddress(device.address)
+        }
         if (ActivityCompat.checkSelfPermission(
                 application,
                 Manifest.permission.BLUETOOTH_SCAN
@@ -81,9 +102,6 @@ class FlowerPotViewModel @Inject constructor(
                 Log.e("Bluetooth", "Error al enviar comando", e)
             }
         }
-    }
-    fun sendIrrigationCommand() {
-        sendCommand(_irrigationTime.value.toString())
     }
 }
 

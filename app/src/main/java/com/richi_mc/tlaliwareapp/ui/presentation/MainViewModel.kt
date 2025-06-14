@@ -13,20 +13,41 @@ import android.util.Log
 import androidx.annotation.RequiresPermission
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.richi_mc.tlaliwareapp.ui.FlowerPootDevice
+import com.richi_mc.tlaliwareapp.ui.data.PreferenceRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import java.util.UUID
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor (
     @ApplicationContext
-    private val application: Context
+    private val application: Context,
+    private val preferenceRepository: PreferenceRepository
 ) : ViewModel() {
+
+    private val _savedMac = MutableStateFlow<String?>(null)
+    val savedMac: StateFlow<String?> = _savedMac
+
+    init {
+        viewModelScope.launch {
+            preferenceRepository.macAddress.collect {
+                _savedMac.value = it
+            }
+        }
+    }
+
+    fun connectToSavedDevice(navController: NavController) {
+        _savedMac.value?.let { mac ->
+            navController.navigate(FlowerPootDevice("ESP32", mac))
+        }
+    }
+
     private val bluetoothAdapter: BluetoothAdapter? = (application.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager).adapter
 
     private val _devices = MutableStateFlow<List<BluetoothDevice>>( emptyList() )

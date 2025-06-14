@@ -2,9 +2,7 @@ package com.richi_mc.tlaliwareapp.ui.presentation
 
 import android.Manifest
 import android.bluetooth.BluetoothDevice
-import android.content.Context
 import android.content.pm.PackageManager
-import android.util.Log
 import androidx.annotation.RequiresPermission
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -42,6 +40,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.HorizontalDivider
@@ -174,6 +173,8 @@ fun PuntosAlrededor() {
 
 @Composable
 fun MainContent(
+    hasSavedMac: Boolean,
+    onReconnectClick: () -> Unit = {},
     onConfigClick: () -> Unit = {},
     onSearchClick: () -> Unit = {}
 ) {
@@ -208,6 +209,26 @@ fun MainContent(
             textAlign = TextAlign.Center
         )
         Spacer(modifier = Modifier.height(32.dp))
+
+        if(hasSavedMac){
+            Button(
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                ),
+                onClick = { onReconnectClick() }
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Build, contentDescription = null
+                )
+                Spacer(modifier = Modifier.width(16.dp))
+                Text(
+                    text = "Conectar a última maceta",
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+            Spacer( Modifier.height(16.dp))
+        }
 
         Button(
             colors = ButtonDefaults.buttonColors(
@@ -257,6 +278,7 @@ fun MainScreen(
 ) {
     var dialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    val savedMac by mainViewModel.savedMac.collectAsState()
 
     mainViewModel.initScan()
 
@@ -280,11 +302,16 @@ fun MainScreen(
             }
         }
         MainContent(
+            hasSavedMac = savedMac != null,
+            onReconnectClick = {
+                mainViewModel.connectToSavedDevice(navController)
+            },
             onConfigClick = {
                 navController.navigate(Plants)
+            },
+            onSearchClick = {
+                dialog = true
             }
-        ) {
-            dialog = true
-        }
+        )
     }
 }

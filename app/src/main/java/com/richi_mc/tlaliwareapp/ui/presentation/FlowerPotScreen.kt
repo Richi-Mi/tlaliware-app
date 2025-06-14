@@ -32,6 +32,10 @@ fun FlowerPootScreen(flowerPotViewModel: FlowerPotViewModel, device: FlowerPootD
     var showDialog by remember { mutableStateOf(false) }
     var tempTime by remember { mutableStateOf(irrigationTime.value.toString()) }
 
+    LaunchedEffect(irrigationTime.value) {
+        tempTime = irrigationTime.value.toString()
+    }
+
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(onClick = { showDialog = true }) {
@@ -93,7 +97,12 @@ fun FlowerPootScreen(flowerPotViewModel: FlowerPotViewModel, device: FlowerPootD
                 title = { Text("Configuración de riego") },
                 text = {
                     Column {
-                        Text("Tiempo de riego en segundos:")
+                        Text(
+                            text = "Tiempo actual: ${irrigationTime.value} segundos",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Text("Nuevo tiempo de riego en segundos:")
                         OutlinedTextField(
                             value = tempTime,
                             onValueChange = { tempTime = it },
@@ -105,6 +114,7 @@ fun FlowerPootScreen(flowerPotViewModel: FlowerPotViewModel, device: FlowerPootD
                     TextButton(onClick = {
                         tempTime.toIntOrNull()?.let {
                             flowerPotViewModel.updateIrrigationTime(it)
+                            flowerPotViewModel.sendCommand("" + it)
                         }
                         showDialog = false
                     }) {
